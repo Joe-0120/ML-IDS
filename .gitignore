@@ -8,3 +8,6 @@ ipython_config.py
 Notebooks/CIC-IDS-2017
 Notebooks/models/*
 Notebooks/CIC-IDS-2018
+Notebooks/hyperparam_tuning/
+Notebooks/hyperparam_tuning_hypermodel/
+Notebooks/tuner_dir/
