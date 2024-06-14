@@ -6,9 +6,9 @@ profile_default/
 ipython_config.py
 
 CIC-IDS-2017
-Prototype/Notebooks/models/*
+1_Preliminary_Experiments/Notebooks/models/*
 CIC-IDS-2018
-Prototype/Notebooks/hyperparam_tuning/
-Prototype/Notebooks/hyperparam_tuning_hypermodel*/
-Prototype/Notebooks/tuner_dir/
+1_Preliminary_Experiments/Notebooks/hyperparam_tuning/
+1_Preliminary_Experiments/Notebooks/hyperparam_tuning_hypermodel*/
+1_Preliminary_Experiments/Notebooks/tuner_dir/
 
