@@ -70,6 +70,9 @@ def load_sample_dataset_2018(file_path):
         df.columns = [c.replace(' ', '_').lower() for c in df.columns]
         return df
     combined_df = replace_spaces_in_column_names(combined_df)
+
+    # Remove irrelevant features
+    combined_df = combined_df.iloc[:, 0:80]
     
     print("Creating is_attack column...")
     # Selecting the necessary columns and creating is_attack
@@ -85,4 +88,4 @@ def load_sample_dataset_2018(file_path):
     
     # Remove rows where the 'label' column has the value 'label'
     combined_df = combined_df[combined_df['label'] != 'label']
-
+    return combined_df
