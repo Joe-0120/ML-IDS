@@ -8,6 +8,7 @@ import seaborn as sns
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import average_precision_score
+from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 import os
 import re
@@ -88,4 +89,14 @@ def load_sample_dataset_2018(file_path):
     
     # Remove rows where the 'label' column has the value 'label'
     combined_df = combined_df[combined_df['label'] != 'label']
+
+    # Initialize the LabelEncoder
+    label_encoder = LabelEncoder()
+    # Fit and transform the labels to integers
+    combined_df['label_code'] = label_encoder.fit_transform(combined_df['label'])
+
+    # Double the number of rows with 'label' = "SQL Injection" by copying them
+    sql_injection_rows = combined_df[combined_df['label'] == 'SQL Injection']
+    combined_df = pd.concat([combined_df, sql_injection_rows])
+    
     return combined_df
