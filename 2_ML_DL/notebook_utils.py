@@ -65,6 +65,25 @@ def test_metrics(model_name, model, dataset_type, scaler, X_test, Y_test):
     print(metrics_by_label)
     return metrics, metrics_by_label
 
+# Define the updated test_metrics_DL function with reshape parameter
+def test_metrics_DL(model_name, model, scaler, X_test, Y_test, reshape=False):
+    # Reshape data before normalizing
+    if reshape:
+        X_test_reshaped = X_test.reshape(-1, X_test.shape[1], 1)
+        X_test_normalized = scaler.transform(X_test_reshaped.reshape(-1, X_test.shape[1])).reshape(-1, X_test.shape[1], 1)
+    else:
+        X_test_normalized = scaler.transform(X_test)
+    Y_pred = (model.predict(X_test_normalized) > 0.5).astype("int32")
+
+    metrics = metrics_report(f"Test {model_name} ({"SMOTE"})", Y_test.is_attack, Y_pred)
+    plot_confusion_matrix(f"{model_name} ({"SMOTE"})", Y_test, Y_pred)
+    # Calculate metrics by label
+    metrics_by_label = calculate_metrics_by_label(Y_test.is_attack, Y_pred, Y_test.label)
+    metrics_by_label['Method'] = "SMOTE"
+    print(f"Metrics by Label ({"SMOTE"}):")
+    print(metrics_by_label)
+    return metrics, metrics_by_label
+
 def plot_overall_accuracy(metrics):
     methods = ['original', 'random', 'smote', 'adasyn']
     overall_accuracies = []
