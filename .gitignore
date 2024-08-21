@@ -14,3 +14,6 @@ CIC-IDS-2018
 2_ML_DL\hyperparam_tuning
 2_ML_DL\models
 2_ML_DL\ML_models_ids
+2_ML_DL/models/
+2_ML_DL/optimization/
+2_ML_DL/optimization_2018/

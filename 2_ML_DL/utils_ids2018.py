@@ -14,6 +14,8 @@ import os
 import re
 import gc
 import seaborn as sns
+from imblearn.over_sampling import RandomOverSampler
+from sklearn.feature_selection import mutual_info_classif
 
 def load_sample_dataset_2018(file_path):
     # Define the regular expression to match spaces and special characters
@@ -82,3 +84,66 @@ def load_sample_dataset_2018(file_path):
     combined_df = pd.concat([combined_df, sql_injection_rows])
     
     return combined_df
+
+def replace_invalid(df):
+    df = df.drop(columns=['timestamp'])
+    # Select only numeric columns
+    numeric_columns = df.select_dtypes(include=[np.number]).columns
+    # Identify columns with NaN, infinite, or negative values
+    nan_columns = df[numeric_columns].columns[df[numeric_columns].isna().any()]
+    inf_columns = df[numeric_columns].columns[np.isinf(df[numeric_columns]).any()]
+    # Drop rows with NaN values (low percentage of NaN values)
+    df = df.dropna(axis=0)
+    # Drop rows with infinite values (assuming low percentage)
+    for col in inf_columns:
+        df = df[np.isfinite(df[col])]
+    return df
+    
+def load_ids2018():
+    file_path = r"..\CIC-IDS-2018\Processed Traffic Data for ML Algorithms"
+    df = load_sample_dataset_2018(file_path)
+    df = replace_invalid(df)
+    return df
+
+def oversample_minority_classes(X, Y, sample_size=1000):
+    y = Y["label_code"]
+    # Create a subset of the oversampled data
+    X_sample, _, y_sample, _ = train_test_split(X, y, train_size=sample_size, stratify=y, random_state=42)
+    ros = RandomOverSampler(random_state=42)
+    X_resampled, y_resampled = ros.fit_resample(X_sample, y_sample)
+    return X_resampled, y_resampled
+
+def information_gain_feature_selection(X, Y, sample_size=1000):
+    # Create an oversampled subset of the data
+    X_sample, y_sample = oversample_minority_classes(X, Y, sample_size)
+    # Create is_attack column based on label_code
+    y_sample = (y_sample != 0).astype(int)
+    # Perform feature selection on the oversampled subset
+    info_gain = mutual_info_classif(X_sample, y_sample)
+    info_gain_df = pd.DataFrame({'Feature': X.columns, 'Information Gain': info_gain})
+    info_gain_df = info_gain_df.sort_values(by='Information Gain', ascending=False)
+    print(info_gain_df)
+    selected_features = info_gain_df[info_gain_df['Information Gain'] > 0.1]['Feature'].tolist()
+    return selected_features
+   
+def correlation_feature_selection(df, threshold=0.9):
+    corr_matrix = df.corr().abs()
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+    to_drop = [column for column in upper.columns if any(upper[column] > threshold)]
+    return df.drop(columns=to_drop)
+
+def feature_selection(X, Y):
+    stats = X.describe()
+    std = stats.loc["std"]
+    features_no_var = std[std == 0.0].index
+    # Exclude non-numeric columns (e.g., categorical columns) from the features with zero variance
+    features_no_var_numeric = [col for col in features_no_var if col in X.select_dtypes(include=[np.number]).columns]
+    X = X.drop(columns=features_no_var_numeric)
+    X = X.drop(columns=['dst_port'])
+    X = correlation_feature_selection(X)
+    # Determine the selected features using the oversampled subset
+    selected_features = information_gain_feature_selection(X, Y)
+    # Apply the selected features to the main dataset
+    X = X[selected_features]
+    X.info()
+    return X

@@ -84,6 +84,44 @@ def test_metrics_DL(model_name, model, scaler, X_test, Y_test, reshape=False):
     print(metrics_by_label)
     return metrics, metrics_by_label
 
+# Define the updated test_metrics_DL function with reshape parameter
+def test_metrics_AE(model_name, model, scaler, X_test, Y_test, threshold = 95):
+    X_test_normalized = scaler.transform(X_test)
+    # Perform reconstruction using the Autoencoder
+    reconstructions = model.predict(X_test_normalized)
+    # Calculate Mean Squared Error (MSE)
+    mse = np.mean(np.power(X_test_normalized - reconstructions, 2), axis=1)
+    # Set a threshold for anomaly detection (95th percentile of the training MSE)
+    threshold = np.percentile(mse, threshold)
+    Y_pred = (mse > threshold).astype(int)
+    metrics = metrics_report(f"Test {model_name} ({"SMOTE"})", Y_test.is_attack, Y_pred)
+    plot_confusion_matrix(f"{model_name} ({"SMOTE"})", Y_test, Y_pred)
+    # Calculate metrics by label
+    metrics_by_label = calculate_metrics_by_label(Y_test.is_attack, Y_pred, Y_test.label)
+    metrics_by_label['Method'] = "SMOTE"
+    print(f"Metrics by Label ({"SMOTE"}):")
+    print(metrics_by_label)
+    return metrics, metrics_by_label
+
+def test_metrics_AE_new(model_name, model, scaler, X_test, Y_test, threshold):
+    X_test_normalized = scaler.transform(X_test)
+    # Perform reconstruction using the Autoencoder
+    reconstructions = model.predict(X_test_normalized)
+    # Calculate Mean Absolute Error (MAE)
+    test_loss = np.mean(np.abs(X_test_normalized - reconstructions), axis=1)
+    # Classify as anomaly if reconstruction error > threshold
+    Y_pred = (test_loss > threshold).astype(int)
+    metrics = metrics_report(f"Test {model_name} ({"SMOTE"})", Y_test.is_attack, Y_pred)
+    plot_confusion_matrix(f"{model_name} ({"SMOTE"})", Y_test, Y_pred)
+    # Calculate metrics by label
+    metrics_by_label = calculate_metrics_by_label(Y_test.is_attack, Y_pred, Y_test.label)
+    metrics_by_label['Method'] = "SMOTE"
+    print(f"Metrics by Label ({"SMOTE"}):")
+    print(metrics_by_label)
+    return metrics, metrics_by_label
+    
+    return Y_pred, metrics_by_label
+    
 def plot_overall_accuracy(metrics):
     methods = ['original', 'random', 'smote', 'adasyn']
     overall_accuracies = []
